@@ -1,0 +1,15 @@
+[package]
+name = "catalyst-fund-archive-tool"
+version = "0.1.0"
+authors = ["Yevhenii Babichenko <eugene.babichenko@iohk.io>"]
+edition = "2018"
+
+[dependencies]
+structopt = "0.3"
+csv = "1"
+serde = { version = "1", features = ["derive"] }
+hex = "0.4"
+
+chain-storage = { git = "https://github.com/input-output-hk/chain-libs.git", branch = "master" }
+chain-impl-mockchain = { git = "https://github.com/input-output-hk/chain-libs.git", branch = "master" }
+chain-ser = { git = "https://github.com/input-output-hk/chain-libs.git", branch = "master" }
