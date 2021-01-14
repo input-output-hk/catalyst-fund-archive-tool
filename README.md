@@ -45,6 +45,12 @@ For each type the following information is included:
 They carry and additional column named `choice` that carries the number of the
 option the account has voted for.
 
+#### Summary
+
+For every public vote plan an additional file named `vote_plan_summary_<vote
+plan id>.csv` is created. This file contains the total number of votes (not the
+total of voting power) per each proposal in the vote plan.
+
 ### Private vote plans
 
 _Not yet implemented._

@@ -3,7 +3,10 @@ use chain_impl_mockchain::{
 };
 use chain_ser::mempack::{ReadBuf, Readable};
 use serde::Serialize;
-use std::{collections::HashMap, path::PathBuf};
+use std::{
+    collections::{BTreeMap, HashMap},
+    path::PathBuf,
+};
 use structopt::StructOpt;
 
 const MAIN_TAG: &str = "HEAD";
@@ -63,13 +66,14 @@ fn main() {
                 };
                 let certificate = tx.as_slice().payload().into_payload();
 
-                let writer = vote_plan_files
+                let (writer, counters) = vote_plan_files
                     .entry(certificate.vote_plan().clone())
                     .or_insert_with(|| {
                         let mut path = command.output_dir.clone();
                         path.push(format!("vote_plan_{}.csv", certificate.vote_plan()));
                         let file = std::fs::File::create(path).unwrap();
-                        csv::Writer::from_writer(file)
+                        let vote_counters = BTreeMap::new();
+                        (csv::Writer::from_writer(file), vote_counters)
                     });
 
                 let choice = match certificate.payload() {
@@ -78,6 +82,12 @@ fn main() {
                         unimplemented!("private votes are not supported yet")
                     }
                 };
+
+                let counter = counters
+                    .entry(certificate.proposal_index())
+                    .or_insert_with(BTreeMap::<_, u64>::new);
+                let counter_entry = counter.entry(choice).or_default();
+                *counter_entry += 1;
 
                 writer
                     .serialize(Vote {
@@ -90,6 +100,41 @@ fn main() {
                     })
                     .unwrap();
             }
+        }
+    }
+
+    for (vote_plan_id, (_, counters)) in vote_plan_files.iter() {
+        let path = {
+            let mut path = command.output_dir.clone();
+            path.push(format!("vote_plan_summary_{}.csv", vote_plan_id));
+            path
+        };
+        let file = std::fs::File::create(path).unwrap();
+        let mut writer = csv::Writer::from_writer(file);
+
+        let max_key = counters
+            .values()
+            .map(|tree| tree.keys())
+            .flatten()
+            .cloned()
+            .fold(0, u8::max);
+
+        let header = {
+            let mut header = vec!["proposal".to_string()];
+            for i in 0..=max_key {
+                header.push(i.to_string());
+            }
+            header
+        };
+        writer.write_record(header).unwrap();
+
+        for (proposal, counter) in counters.iter() {
+            let mut row = vec![String::new(); max_key as usize + 1];
+            row[0] = proposal.to_string();
+            for (choice, count) in counter.iter() {
+                row[*choice as usize + 1] = count.to_string();
+            }
+            writer.write_record(row).unwrap();
         }
     }
 }
