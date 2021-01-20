@@ -121,7 +121,7 @@ fn main() {
 
         let header = {
             let mut header = vec!["proposal".to_string()];
-            for i in 0..=max_key {
+            for i in 0..max_key {
                 header.push(i.to_string());
             }
             header
@@ -132,7 +132,7 @@ fn main() {
             let mut row = vec![String::new(); max_key as usize + 1];
             row[0] = proposal.to_string();
             for (choice, count) in counter.iter() {
-                row[*choice as usize + 1] = count.to_string();
+                row[*choice as usize] = count.to_string();
             }
             writer.write_record(row).unwrap();
         }
