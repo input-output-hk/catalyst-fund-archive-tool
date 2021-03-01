@@ -35,7 +35,7 @@ For each type the following information is included:
 | Name | Description |
 | --- | --- |
 | `fragment_id` | The ID of a vote transaction (hex) |
-| `caster` | The ID of the account that casted this vote (hex) |
+| `caster` | The address of the account that casted this vote |
 | `proposal` | The number of the proposal this vote was for (number) |
 | `time` | The time this vote was casted in the format `epoch.slot` |
 | `raw_fragment` | hex-encoded transaction |
