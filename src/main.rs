@@ -1,7 +1,9 @@
+use chain_addr::Discrimination;
 use chain_impl_mockchain::{
     block::Block, chaintypes::HeaderId, fragment::Fragment, transaction::InputEnum,
 };
 use chain_ser::mempack::{ReadBuf, Readable};
+use jormungandr_lib::interfaces::{AccountIdentifier, Address};
 use serde::Serialize;
 use std::{collections::HashMap, path::PathBuf};
 use structopt::StructOpt;
@@ -20,7 +22,7 @@ struct Command {
 #[derive(Serialize)]
 struct Vote {
     fragment_id: String,
-    caster: String,
+    caster: Address,
     proposal: u8,
     time: String,
     choice: u8,
@@ -57,7 +59,8 @@ fn main() {
 
                 let input = tx.as_slice().inputs().iter().next().unwrap().to_enum();
                 let caster = if let InputEnum::AccountInput(account_id, _value) = input {
-                    account_id
+                    AccountIdentifier::from(account_id)
+                        .into_address(Discrimination::Production, "ca")
                 } else {
                     panic!();
                 };
@@ -82,7 +85,7 @@ fn main() {
                 writer
                     .serialize(Vote {
                         fragment_id: fragment_id.to_string(),
-                        caster: hex::encode(caster.as_ref()),
+                        caster,
                         proposal: certificate.proposal_index(),
                         time: block.header.block_date().to_string(),
                         raw_fragment: hex::encode(tx.as_ref()),
